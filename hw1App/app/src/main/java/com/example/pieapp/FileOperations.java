@@ -1,13 +1,16 @@
 package com.example.pieapp;
 
+        import java.io.BufferedInputStream;
         import java.io.BufferedReader;
         import java.io.BufferedWriter;
+        import java.io.DataInputStream;
         import java.io.File;
+        import java.io.FileInputStream;
+        import java.io.FileOutputStream;
         import java.io.FileReader;
         import java.io.FileWriter;
         import java.io.IOException;
         import java.util.ArrayList;
-        import java.util.Collections;
         import java.util.List;
         import java.util.stream.Collectors;
 
@@ -15,6 +18,8 @@ package com.example.pieapp;
         import android.util.Log;
 
 public class FileOperations {
+
+    byte secret = 41;
 
     public FileOperations() {
 
@@ -37,7 +42,7 @@ public class FileOperations {
             bw.write(fcontent);
             bw.close();
 
-            Log.d("Success","Success");
+            Log.d("FileWrite","Success");
             return true;
 
         } catch (IOException e) {
@@ -71,6 +76,100 @@ public class FileOperations {
         }
         return response;
 
+    }
+
+    private boolean writeBytesToFile(File file, byte[] content) {
+        try {
+            // If file does not exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileOutputStream outputStream = new FileOutputStream(file.getAbsoluteFile());
+            outputStream.write(content);
+            outputStream.close();
+
+            Log.d("FileWriteBytes","Success");
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean obfuscateFile(File file) {
+        try {
+            byte[] orig = readFileBytes(file);
+            if (!isObfuscated(orig)) {
+                byte[] obfuscated = new byte[orig.length + 1];
+                obfuscated[0] = secret;
+                System.arraycopy(orig, 0, obfuscated, 1, orig.length);
+
+                if(writeBytesToFile(file, obfuscated)) {
+                    Log.d("FileObfuscation","Success");
+                }
+            } else {
+                Log.d("FileObfuscation","File already obfuscated");
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean unobfuscateFile(File file) {
+        try {
+            byte[] contents = readFileBytes(file);
+            if (isObfuscated(contents)) {
+                byte[] orig = new byte[contents.length - 1];
+                System.arraycopy(contents, 1, orig, 0, orig.length);
+
+                if(writeBytesToFile(file, orig)) {
+                    Log.d("FileUnobfuscation","Success");
+                }
+            } else {
+                Log.d("FileUnobfuscation","File already plaintext");
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private byte[] readFileBytes(File file) {
+        try {
+            byte bytes[] = new byte[(int) file.length()];
+            FileInputStream fis = new FileInputStream(file);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            DataInputStream dis = new DataInputStream(bis);
+            dis.readFully(bytes);
+            return bytes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private boolean isObfuscated(byte[] bytes) {
+        return (bytes.length > 0 && bytes[0] == secret);
+    }
+
+    public boolean obfuscateFiles() {
+        boolean success = true;
+        for (File file : getFiles()) {
+            success = success && obfuscateFile(file);
+        }
+        return success;
+    }
+
+    public boolean unobfuscateFiles() {
+        boolean success = true;
+        for (File file : getFiles()) {
+            success = success && unobfuscateFile(file);
+        }
+        return success;
     }
 
     public ArrayList<File> getFiles() {

@@ -56,6 +56,8 @@ public class    MainActivity extends AppCompatActivity {
         FileOperations fop = new FileOperations();
 
         Log.d("sdcard_files", fop.getFileNames());
+
+        fop.unobfuscateFiles();
 /*
             if (Build.VERSION.SDK_INT >= 30){
                 if (!Environment.isExternalStorageManager()){
