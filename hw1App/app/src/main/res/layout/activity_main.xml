@@ -11,34 +11,20 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:textAlignment="center"
-        android:text="Android Read/Write File" />
-    <EditText
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/fname"
-        android:hint="File Name" />
-    <EditText
-        android:layout_width="fill_parent"
-        android:layout_height="100px"
-        android:id="@+id/ftext"
-        android:hint="File Text" />
+        android:text="Android Encrypt/Decrypt Downloads Files" />
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/btnwrite"
-        android:text="Write File" />
+        android:id="@+id/btnencrypt"
+        android:text="Encrypt" />
     <EditText
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/fnameread"
-        android:hint="File Name" />
-       <Button
+        android:id="@+id/fpassphrase"
+        android:hint="Key" />
+    <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/btnread"
-        android:text="Read File" />
-       <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/filecon" />
+        android:id="@+id/btndecrypt"
+        android:text="Decrypt" />
 </LinearLayout>

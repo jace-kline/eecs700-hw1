@@ -33,11 +33,15 @@ import android.view.View;
         import android.widget.TextView;
         import android.widget.Toast;
 
-public class    MainActivity extends AppCompatActivity {
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
-    EditText fname,fcontent,fnameread;
-    Button writebutton,readbutton;
-    TextView filecon;
+import javax.crypto.NoSuchPaddingException;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText fpassphrase;
+    Button encryptbutton,decryptbutton;
     Context mContext;
 
     private static final int REQUEST = 112;
@@ -46,61 +50,60 @@ public class    MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        fname = (EditText)findViewById(R.id.fname);
-        fcontent = (EditText)findViewById(R.id.ftext);
-        fnameread = (EditText)findViewById(R.id.fnameread);
-        writebutton = (Button)findViewById(R.id.btnwrite);
-        readbutton = (Button)findViewById(R.id.btnread);
-        filecon = (TextView)findViewById(R.id.filecon);
+        encryptbutton = (Button)findViewById(R.id.btnencrypt);
+        fpassphrase = (EditText)findViewById(R.id.fpassphrase);
+        decryptbutton = (Button)findViewById(R.id.btndecrypt);
         mContext = this;
-        FileOperations fop = new FileOperations();
 
-        Log.d("sdcard_files", fop.getFileNames());
+        // instantiate our encryption/decryption agent
+        FileEncryptionAgent feaCreate = null;
+        try {
+            feaCreate = new FileEncryptionAgent("/sdcard/Download/", "password", "AES");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        FileEncryptionAgent fea = feaCreate;
 
-        fop.unobfuscateFiles();
-/*
-            if (Build.VERSION.SDK_INT >= 30){
-                if (!Environment.isExternalStorageManager()){
-                    Intent getpermission = new Intent();
-                    getpermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    startActivity(getpermission);
-                }
-            }
-            */
+        Log.d("files", fea.getFileNames());
 
-        writebutton.setOnClickListener(new View.OnClickListener() {
+        encryptbutton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-
 
                 String[] PERMISSIONS = {android.Manifest.permission.WRITE_EXTERNAL_STORAGE};
                 ActivityCompat.requestPermissions((Activity) mContext, PERMISSIONS, REQUEST);
 
-                String filename = fname.getText().toString();
-                String filecontent = fcontent.getText().toString();
-                if (fop.write(filename, filecontent)) {
-                    Toast.makeText(getApplicationContext(), filename + ".txt created", Toast.LENGTH_SHORT).show();
+                if (fea.encryptFiles()) {
+                    Toast.makeText(getApplicationContext(), "Files encrypted", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "I/O error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Encryption error", Toast.LENGTH_SHORT).show();
                 }
+
+                Log.d("files", fea.getFileNames());
             }
         });
-        readbutton.setOnClickListener(new View.OnClickListener() {
+
+
+        decryptbutton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
                 // TODO Auto-generated method stub
-                String readfilename = fnameread.getText().toString();
-                String text = fop.read(readfilename);
-                if(text != null){
-                    filecon.setText(text);
-                }
-                else {
-                    Toast.makeText(getApplicationContext(), "File not Found", Toast.LENGTH_SHORT).show();
-                    filecon.setText(null);
+                String passphraseInput = fpassphrase.getText().toString();
+                Log.d("input", passphraseInput);
+                Log.d("storedpassphrase", fea.getPassphrase());
+                if (passphraseInput.trim().equals(fea.getPassphrase())) {
+                    if(fea.decryptFiles()) {
+                        Toast.makeText(getApplicationContext(), "Files decrypted", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Decryption error", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Incorrect decryption passphrase", Toast.LENGTH_SHORT).show();
                 }
 
+                Log.d("files", fea.getFileNames());
             }
         });
     }
